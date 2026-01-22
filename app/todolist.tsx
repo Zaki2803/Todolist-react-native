@@ -51,7 +51,7 @@ export default function TodoListPage() {
             
             <Button title="Tambah" onPress={addTodo} />
             <View style={{marginBottom: 10}}/>
-            <Button title="Muat Data" onPress={loadTodos} />
+            <Button title="Tambah Data" onPress={loadTodos} />
             <View style={{marginBottom: 10 }}/>
             <Button title="Hapus Semua" onPress={clearAll} />
             <View style={{marginBottom: 10 }}/>
