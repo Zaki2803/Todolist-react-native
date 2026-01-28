@@ -4,27 +4,32 @@ import { Button, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View }
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TodoListPage() {
-    const [todos, setTodos] = useState<string[]>([]);
+    const [todos, setTodos] = useState<{text: string, completed: boolean}[]>([]);
     const [inputText, setInputText] = useState("");
 
-    // Tambah todo
     const addTodo = () => {
         if (inputText.trim()) {
-            const newTodos = [...todos, inputText.trim()];
+            const newTodos = [...todos, {text: inputText.trim(), completed: false}];
             setTodos(newTodos);
             AsyncStorage.setItem("todos", JSON.stringify(newTodos));
             setInputText("");
         }
     };
 
-    // Hapus todo
     const deleteTodo = (index: number) => {
         const newTodos = todos.filter((_, i) => i !== index);
         setTodos(newTodos);
         AsyncStorage.setItem("todos", JSON.stringify(newTodos));
     };
 
-    // Ambil todos
+    const toggleTodo = (index: number) => {
+        const newTodos = todos.map((todo, i) => 
+            i === index ? {...todo, completed: !todo.completed} : todo
+        );
+        setTodos(newTodos);
+        AsyncStorage.setItem("todos", JSON.stringify(newTodos));
+    };
+
     const loadTodos = async () => {
         const stored = await AsyncStorage.getItem("todos");
         if (stored) {
@@ -32,7 +37,6 @@ export default function TodoListPage() {
         }
     };
 
-    // Hapus semua
     const clearAll = () => {
         setTodos([]);
         AsyncStorage.removeItem("todos");
@@ -57,9 +61,9 @@ export default function TodoListPage() {
             <View style={{marginBottom: 10 }}/>
 
             <View style={style.tableHeader}>
-                        <Text style={style.headerNumber}>No</Text>
-                        <Text style={style.headerText}>Todo</Text>
-                        <Text style={style.headerAction}>Aksi</Text>
+                        <Text style={style.headerCheckbox}></Text>
+                        <Text style={style.headerText}>Daftar Tugas</Text>
+                        <Text style={style.headerAction}></Text>
                     </View>
 
             <FlatList
@@ -67,8 +71,21 @@ export default function TodoListPage() {
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item, index }) => (
                     <View style={style.tableRow}>
-                        <Text style={style.tableNumber}>{index + 1}</Text>
-                        <Text style={style.tableText}>{item}</Text>
+                        <TouchableOpacity 
+                            style={style.checkboxContainer}
+                            onPress={() => toggleTodo(index)}
+                        >
+                            <View style={[
+                                style.checkbox,
+                                item.completed && style.checkboxChecked
+                            ]}>
+                                {item.completed && <Text style={style.checkmark}>✓</Text>}
+                            </View>
+                        </TouchableOpacity>
+                        <Text style={[
+                            style.tableText,
+                            item.completed && style.completedText
+                        ]}>{item.text}</Text>
                         <TouchableOpacity 
                             style={style.tableDeleteButton}
                             onPress={() => deleteTodo(index)}
@@ -90,9 +107,8 @@ const style = StyleSheet.create({
         borderTopLeftRadius:8,
         borderTopRightRadius:9,
     },
-
-    headerNumber: {
-        width: 40,
+    headerCheckbox: {
+        width: 50,
         fontWeight: 'bold',
         textAlign: 'center',
         color: '#333',
@@ -118,17 +134,39 @@ const style = StyleSheet.create({
         borderColor: '#000000ff',
         alignItems: 'center',
     },
-    tableNumber: {
-        width: 40,
-        textAlign: 'center',
+    checkboxContainer: {
+        width: 50,
+        alignItems: 'center',
+        padding: 5,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderWidth: 2,
+        borderColor: '#333',
+        borderRadius: 3,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    checkboxChecked: {
+        backgroundColor: '#4CAF50',
+        borderColor: '#4CAF50',
+    },
+    checkmark: {
+        color: '#fff',
         fontSize: 14,
-        color: '#666',
+        fontWeight: 'bold',
     },
     tableText: {
         flex: 1,
         fontSize: 16,
         color: '#333',
         paddingHorizontal: 10,
+    },
+    completedText: {
+        textDecorationLine: 'line-through',
+        color: '#999',
     },
     tableDeleteButton: {
         width: 60,
@@ -138,6 +176,4 @@ const style = StyleSheet.create({
     deleteButtonText: {
         fontSize: 18,
     },
-    
-    
 })
